@@ -6,37 +6,33 @@
 <title>School Spaces — First Floor (FP-202)</title>
 <style>
   :root { --bg:#0e1116; --panel:#171b22; --panel2:#1f2530; --line:#2a313c;
-          --text:#e6e9ef; --muted:#8a93a3; --accent:#5b9dff; }
+          --text:#e6e9ef; --muted:#8a93a3; --accent:#5b9dff; --warn:#f5a524; }
   * { box-sizing:border-box; }
   html,body { margin:0; height:100%; background:var(--bg); color:var(--text);
               font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; overflow:hidden; }
   #app { position:fixed; inset:0; }
   canvas { display:block; }
-
   .bar { position:absolute; top:0; left:0; right:0; height:52px; display:flex; align-items:center;
          gap:16px; padding:0 16px; background:linear-gradient(#11151bdd,#11151b99); backdrop-filter:blur(6px);
          border-bottom:1px solid var(--line); z-index:5; }
-  .bar h1 { font-size:15px; margin:0; font-weight:600; letter-spacing:.2px; }
+  .bar h1 { font-size:15px; margin:0; font-weight:600; }
   .bar .sub { color:var(--muted); font-size:12px; }
   .bar .stats { margin-left:auto; display:flex; gap:18px; color:var(--muted); font-size:12px; }
   .bar .stats b { color:var(--text); font-weight:600; }
-
   .search { position:absolute; top:64px; left:16px; z-index:5; width:240px; }
   .search input { width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--line);
                   background:var(--panel); color:var(--text); outline:none; }
   .search input:focus { border-color:var(--accent); }
-
   .legend { position:absolute; top:64px; right:16px; z-index:5; width:210px; background:var(--panel);
             border:1px solid var(--line); border-radius:12px; padding:10px; }
   .legend h3 { margin:2px 4px 8px; font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
-  .legend .row { display:flex; align-items:center; gap:9px; padding:6px 6px; border-radius:7px; cursor:pointer; user-select:none; }
+  .legend .row { display:flex; align-items:center; gap:9px; padding:6px; border-radius:7px; cursor:pointer; user-select:none; }
   .legend .row:hover { background:var(--panel2); }
   .legend .row.off { opacity:.35; }
   .legend .sw { width:13px; height:13px; border-radius:3px; flex:0 0 auto; }
   .legend .row .nm { text-transform:capitalize; }
   .legend .row .ct { margin-left:auto; color:var(--muted); font-size:12px; }
-
-  .info { position:absolute; left:16px; bottom:16px; z-index:5; width:262px; background:var(--panel);
+  .info { position:absolute; left:16px; bottom:16px; z-index:5; width:264px; background:var(--panel);
           border:1px solid var(--line); border-radius:12px; padding:14px 16px; display:none; }
   .info.show { display:block; }
   .info .cat { font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--accent); }
@@ -44,26 +40,23 @@
   .info .grid { display:grid; grid-template-columns:auto 1fr; gap:4px 14px; }
   .info .grid .k { color:var(--muted); }
   .info .grid .v { text-align:right; font-variant-numeric:tabular-nums; }
-
+  .info .flag { margin-top:10px; font-size:12px; color:var(--warn); border-top:1px solid var(--line); padding-top:8px; display:none; }
   .controls { position:absolute; right:16px; bottom:16px; z-index:5; display:flex; gap:8px; }
   .btn { padding:8px 12px; border-radius:9px; border:1px solid var(--line); background:var(--panel);
          color:var(--text); cursor:pointer; font-size:13px; }
   .btn:hover { background:var(--panel2); }
   .btn.active { border-color:var(--accent); color:var(--accent); }
-
-  .label { color:#eef2f8; font-size:11px; font-weight:600; text-shadow:0 1px 3px #000a, 0 0 2px #000;
+  .label { color:#eef2f8; font-size:11px; font-weight:600; text-shadow:0 1px 3px #000a;
            pointer-events:none; white-space:nowrap; padding:1px 5px; border-radius:5px;
            background:#0b0e13aa; border:1px solid #ffffff22; }
   .label .a { color:#aeb6c4; font-weight:500; }
   .hint { position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:4;
           color:var(--muted); font-size:12px; pointer-events:none; }
-  #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-             color:var(--muted); z-index:9; }
+  #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); z-index:9; }
 </style>
 </head>
 <body>
 <div id="app"></div>
-
 <div class="bar">
   <h1>School Spaces <span class="sub">— First Floor · FP-202</span></h1>
   <div class="stats">
@@ -72,27 +65,23 @@
     <span><b id="st-ext">–</b> footprint</span>
   </div>
 </div>
-
 <div class="search"><input id="q" placeholder="Search rooms (e.g. Year 5, store, prayer)…" /></div>
-
 <div class="legend"><h3>Categories — click to toggle</h3><div id="legend"></div></div>
-
 <div class="info" id="info">
   <div class="cat" id="i-cat"></div>
   <div class="nm" id="i-nm"></div>
   <div class="grid">
-    <div class="k">Area</div><div class="v" id="i-area"></div>
-    <div class="k">Dimensions</div><div class="v" id="i-dim"></div>
+    <div class="k">Area (plan)</div><div class="v" id="i-area"></div>
+    <div class="k">Footprint extent</div><div class="v" id="i-dim"></div>
     <div class="k">Level</div><div class="v" id="i-lvl"></div>
     <div class="k">Finished floor</div><div class="v" id="i-ffl"></div>
   </div>
+  <div class="flag" id="i-flag">⚠ Approximate footprint — size is from the plan area; exact shape couldn't be auto-traced.</div>
 </div>
-
 <div class="controls">
   <button class="btn" id="btn-labels">Labels: off</button>
   <button class="btn" id="btn-reset">Reset view</button>
 </div>
-
 <div class="hint">drag to orbit · scroll to zoom · right-drag to pan · click a room</div>
 <div id="loading">Loading model…</div>
 
@@ -109,178 +98,174 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const CAT = {
-  classroom:  { c:0x4f8cff, label:'Classroom' },
-  specialist: { c:0x9b6bff, label:'Specialist' },
-  hall:       { c:0xff9f43, label:'Hall / large' },
-  admin:      { c:0x2dd4bf, label:'Admin / staff' },
-  prayer:     { c:0xf472b6, label:'Prayer' },
-  store:      { c:0xa3a3a3, label:'Store' },
-  service:    { c:0x64748b, label:'Service' },
-  other:      { c:0xc9b458, label:'Other' },
+  classroom:   { c:0x4f8cff, label:'Classroom' },
+  specialist:  { c:0x9b6bff, label:'Specialist' },
+  hall:        { c:0xff9f43, label:'Hall / large' },
+  admin:       { c:0x2dd4bf, label:'Admin / staff' },
+  prayer:      { c:0xf472b6, label:'Prayer' },
+  store:       { c:0xa3a3a3, label:'Store' },
+  service:     { c:0x64748b, label:'Service' },
+  other:       { c:0xc9b458, label:'Other' },
+  circulation: { c:0x3a4350, label:'Circulation' },
 };
 
-const app = document.getElementById('app');
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0e1116);
-scene.fog = new THREE.Fog(0x0e1116, 240, 620);
-
-const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.5, 4000);
-const renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setSize(innerWidth, innerHeight);
+const app=document.getElementById('app');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0e1116);
+scene.fog=new THREE.Fog(0x0e1116, 240, 700);
+const camera=new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.5, 5000);
+const renderer=new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
 app.appendChild(renderer.domElement);
-
-const labelRenderer = new CSS2DRenderer();
-labelRenderer.setSize(innerWidth, innerHeight);
-labelRenderer.domElement.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none';
+const labelRenderer=new CSS2DRenderer();
+labelRenderer.setSize(innerWidth,innerHeight);
+labelRenderer.domElement.style.cssText='position:absolute;top:0;left:0;pointer-events:none';
 app.appendChild(labelRenderer.domElement);
+const controls=new OrbitControls(camera, renderer.domElement);
+controls.enableDamping=true; controls.maxPolarAngle=Math.PI*0.495;
+scene.add(new THREE.HemisphereLight(0xcfe0ff,0x202832,1.1));
+const sun=new THREE.DirectionalLight(0xffffff,1.2); sun.position.set(120,240,90); scene.add(sun);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.maxPolarAngle = Math.PI*0.495;
+const rooms=[]; let selected=null, labelsOn=false;
+const raycaster=new THREE.Raycaster(); const mouse=new THREE.Vector2();
 
-scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x202832, 1.1));
-const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-sun.position.set(120, 220, 80); scene.add(sun);
-
-const rooms = [];
-let selected = null, labelsOn = false;
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-if (window.SPACES) {              // embedded data: works by double-clicking the file
-  build(window.SPACES);
-} else {                          // fallback: fetch when served over http
-  fetch('spaces.json').then(r=>r.json()).then(build).catch(err=>{
-    document.getElementById('loading').textContent = 'Could not load model data (spaces-data.js missing — rerun build_spaces.py).';
-    console.error(err);
-  });
-}
+if (window.SPACES) build(window.SPACES);
+else fetch('spaces_v2.json').then(r=>r.json()).then(build).catch(err=>{
+  document.getElementById('loading').textContent='Could not load model data (rerun build_spaces_v2.py).'; console.error(err);
+});
 
 function build(data){
   document.getElementById('loading').remove();
-  const [EX, EY] = data.extent;
-  const H = data.floor_height || 3.5;
-  document.getElementById('st-rooms').textContent = data.count;
-  document.getElementById('st-area').textContent =
-    Math.round(data.spaces.reduce((s,r)=>s+r.area,0)).toLocaleString();
-  document.getElementById('st-ext').textContent = `${Math.round(EX)}×${Math.round(EY)} m`;
+  const [EX,EY]=data.extent, H=data.floor_height||3.5;
+  const realRooms=data.spaces.filter(s=>s.category!=='circulation');
+  document.getElementById('st-rooms').textContent=realRooms.length;
+  document.getElementById('st-area').textContent=Math.round(realRooms.reduce((s,r)=>s+r.area,0)).toLocaleString();
+  document.getElementById('st-ext').textContent=`${Math.round(EX)}×${Math.round(EY)} m`;
 
-  // ground + grid
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(EX*1.6, EY*1.6),
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(EX*1.7,EY*1.7),
     new THREE.MeshStandardMaterial({ color:0x141922, roughness:1 }));
-  ground.rotation.x = -Math.PI/2; ground.position.y = -0.05; scene.add(ground);
-  const grid = new THREE.GridHelper(Math.max(EX,EY)*1.6, Math.round(Math.max(EX,EY)/10)*1.6, 0x2a313c, 0x1b212b);
-  grid.position.y = 0; scene.add(grid);
+  ground.rotation.x=-Math.PI/2; ground.position.set(EX/2,-0.05,-EY/2); scene.add(ground);
 
+  let failed=0;
   for (const s of data.spaces){
-    const col = (CAT[s.category]||CAT.other).c;
-    const x = s.cx - EX/2, z = s.cy - EY/2;
-    const geo = new THREE.BoxGeometry(s.w, H, s.d);
-    const mat = new THREE.MeshStandardMaterial({ color:col, transparent:true, opacity:0.82,
-                  roughness:0.55, metalness:0.0 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, H/2, z);
-
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
-                  new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.25 }));
-    mesh.add(edges);
-
-    const div = document.createElement('div'); div.className='label';
-    div.innerHTML = `${s.name} <span class="a">· ${s.area} m²</span>`;
-    const lbl = new CSS2DObject(div); lbl.position.set(0, H/2+1.5, 0); lbl.visible=false;
-    mesh.add(lbl);
-
-    mesh.userData = { s, mat, baseColor:new THREE.Color(col), edges, lbl };
-    scene.add(mesh); rooms.push(mesh);
+    try {
+      const poly=cleanPoly(s.poly);
+      if (poly.length<3) { failed++; continue; }
+      const circ=s.category==='circulation';
+      const h=circ?0.25:H;
+      const shape=new THREE.Shape();
+      poly.forEach(([x,y],i)=> i?shape.lineTo(x,y):shape.moveTo(x,y));
+      const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});
+      geo.rotateX(-Math.PI/2);                       // footprint -> XZ, height -> +Y
+      const col=(CAT[s.category]||CAT.other).c;
+      const mat=new THREE.MeshStandardMaterial({ color:col, transparent:true,
+        opacity:circ?0.45:0.82, roughness:0.6 });
+      const mesh=new THREE.Mesh(geo,mat);
+      const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),
+        new THREE.LineBasicMaterial({ color:s.flagged?0xf5a524:0xffffff,
+          transparent:true, opacity:s.flagged?0.55:0.25 }));
+      mesh.add(edges);
+      const div=document.createElement('div'); div.className='label';
+      div.innerHTML=`${s.name} <span class="a">· ${s.area} m²</span>`;
+      const lbl=new CSS2DObject(div);
+      lbl.position.set(s.centroid[0], h+1.5, -s.centroid[1]); lbl.visible=false;
+      mesh.add(lbl);
+      mesh.userData={ s, mat, edges, lbl, circ };
+      scene.add(mesh); rooms.push(mesh);
+    } catch(e){ failed++; console.warn('skipped space', s.name, e.message); }
   }
+  if (failed) console.warn(`${failed} spaces skipped (bad polygons)`);
+  buildLegend(data); frameAll(); animate();
+}
 
-  buildLegend(data);
-  frameAll();
-  animate();
+// drop consecutive duplicate / collinear-coincident points that break triangulation
+function cleanPoly(poly){
+  if(!poly) return [];
+  const out=[];
+  for(const p of poly){
+    const q=out[out.length-1];
+    if(!q || Math.hypot(p[0]-q[0],p[1]-q[1])>0.05) out.push(p);
+  }
+  if(out.length>1){ const a=out[0],b=out[out.length-1];
+    if(Math.hypot(a[0]-b[0],a[1]-b[1])<=0.05) out.pop(); }
+  return out;
 }
 
 function buildLegend(data){
   const counts={}; data.spaces.forEach(s=>counts[s.category]=(counts[s.category]||0)+1);
-  const el=document.getElementById('legend'); const hidden=new Set();
+  const el=document.getElementById('legend');
   Object.entries(CAT).forEach(([key,info])=>{
     if(!counts[key]) return;
     const row=document.createElement('div'); row.className='row';
     row.innerHTML=`<span class="sw" style="background:#${info.c.toString(16).padStart(6,'0')}"></span>
                    <span class="nm">${info.label}</span><span class="ct">${counts[key]}</span>`;
-    row.onclick=()=>{ const off=row.classList.toggle('off'); off?hidden.add(key):hidden.delete(key);
+    row.onclick=()=>{ const off=row.classList.toggle('off');
       rooms.forEach(m=>{ if(m.userData.s.category===key) m.visible=!off; }); };
     el.appendChild(row);
   });
 }
 
-// --- interaction -------------------------------------------------------------
 function setMouse(e){ mouse.x=(e.clientX/innerWidth)*2-1; mouse.y=-(e.clientY/innerHeight)*2+1; }
 function pick(){ raycaster.setFromCamera(mouse,camera);
-  const hit=raycaster.intersectObjects(rooms,false).filter(h=>h.object.visible)[0];
-  return hit?hit.object:null; }
-
+  return raycaster.intersectObjects(rooms,false).filter(h=>h.object.visible)[0]?.object||null; }
 let hovered=null;
 renderer.domElement.addEventListener('pointermove', e=>{
   setMouse(e); const m=pick();
-  if(hovered&&hovered!==m&&hovered!==selected){ hovered.userData.mat.opacity=0.82; if(!labelsOn) hovered.userData.lbl.visible=false; }
+  if(hovered&&hovered!==m&&hovered!==selected){ hovered.userData.mat.opacity=hovered.userData.circ?0.45:0.82; if(!labelsOn) hovered.userData.lbl.visible=false; }
   hovered=m; renderer.domElement.style.cursor=m?'pointer':'default';
-  if(m&&m!==selected){ m.userData.mat.opacity=0.95; m.userData.lbl.visible=true; }
+  if(m&&m!==selected){ m.userData.mat.opacity=0.97; m.userData.lbl.visible=true; }
 });
 renderer.domElement.addEventListener('click', e=>{ setMouse(e); select(pick()); });
 
+function bbox(poly){ let a=1e9,b=1e9,c=-1e9,d=-1e9; poly.forEach(([x,y])=>{a=Math.min(a,x);b=Math.min(b,y);c=Math.max(c,x);d=Math.max(d,y);}); return [c-a,d-b]; }
 function select(m){
   if(selected){ selected.userData.mat.emissive?.setHex(0x000000);
-    selected.userData.edges.material.opacity=0.25; if(!labelsOn) selected.userData.lbl.visible=false; }
+    selected.userData.edges.material.opacity=selected.userData.s.flagged?0.55:0.25; if(!labelsOn) selected.userData.lbl.visible=false; }
   selected=m;
   const info=document.getElementById('info');
   if(!m){ info.classList.remove('show'); return; }
   const s=m.userData.s;
   m.userData.mat.emissive=new THREE.Color(0xffffff); m.userData.mat.emissiveIntensity=0.18;
   m.userData.edges.material.opacity=0.9; m.userData.lbl.visible=true;
+  const [bw,bd]=bbox(s.poly);
   document.getElementById('i-cat').textContent=(CAT[s.category]||CAT.other).label;
   document.getElementById('i-nm').textContent=s.name;
   document.getElementById('i-area').textContent=`${s.area} m²`;
-  document.getElementById('i-dim').textContent=`${s.w} × ${s.d} m`;
+  document.getElementById('i-dim').textContent=`${bw.toFixed(1)} × ${bd.toFixed(1)} m`;
   document.getElementById('i-lvl').textContent='First Floor';
   document.getElementById('i-ffl').textContent='+4.800 m';
+  document.getElementById('i-flag').style.display=s.flagged?'block':'none';
   info.classList.add('show');
 }
 
-// --- search ------------------------------------------------------------------
 document.getElementById('q').addEventListener('input', e=>{
   const q=e.target.value.trim().toLowerCase();
   rooms.forEach(m=>{ const s=m.userData.s;
     const match=!q || s.name.toLowerCase().includes(q) || s.category.includes(q);
-    m.userData.mat.opacity = q ? (match?0.95:0.12) : 0.82;
-    if(q && match && !labelsOn) m.userData.lbl.visible=true;
-    else if(q && !labelsOn) m.userData.lbl.visible=false;
+    m.userData.mat.opacity = q ? (match?0.97:0.08) : (m.userData.circ?0.45:0.82);
+    m.userData.lbl.visible = labelsOn ? m.visible : (q && match);
   });
 });
-
-// --- buttons -----------------------------------------------------------------
 document.getElementById('btn-labels').addEventListener('click', e=>{
   labelsOn=!labelsOn; e.target.classList.toggle('active',labelsOn);
   e.target.textContent='Labels: '+(labelsOn?'on':'off');
-  rooms.forEach(m=>m.userData.lbl.visible = labelsOn ? m.visible : (m===selected));
+  rooms.forEach(m=>m.userData.lbl.visible = labelsOn ? (m.visible && !m.userData.circ) : (m===selected));
 });
 document.getElementById('btn-reset').addEventListener('click', ()=>{ select(null); frameAll(); });
 
 function frameAll(){
   const box=new THREE.Box3(); rooms.forEach(m=>box.expandByObject(m));
   const c=box.getCenter(new THREE.Vector3()), sz=box.getSize(new THREE.Vector3());
-  const r=Math.max(sz.x,sz.z)*0.85;
-  controls.target.copy(c);
-  camera.position.set(c.x + r*0.7, r*0.85, c.z + r*0.9);
-  camera.updateProjectionMatrix();
+  const r=Math.max(sz.x,sz.z)*0.85; controls.target.copy(c);
+  camera.position.set(c.x+r*0.65, r*0.9, c.z+r*0.95); camera.updateProjectionMatrix();
 }
-
 addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight); labelRenderer.setSize(innerWidth,innerHeight); });
-
-function animate(){ requestAnimationFrame(animate); controls.update();
-  renderer.render(scene,camera); labelRenderer.render(scene,camera); }
+function renderOnce(){ controls.update(); renderer.render(scene,camera); labelRenderer.render(scene,camera); }
+function animate(){ requestAnimationFrame(animate); renderOnce(); }
+// requestAnimationFrame is paused while a tab is hidden; keep rendering so the
+// model still draws in background/headless contexts.
+setInterval(()=>{ if(document.hidden) renderOnce(); }, 150);
 </script>
 </body>
 </html>

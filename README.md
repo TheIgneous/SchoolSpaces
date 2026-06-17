@@ -14,41 +14,58 @@ cd D:/Projects/Playground/BIM
 python -m http.server 8777
 # open http://127.0.0.1:8777/  in a browser
 ```
-(A static server is required — the page fetches `spaces.json`; opening the file
-directly via `file://` is blocked by the browser.)
+The model data is embedded in `spaces-data.js`, so you can also just **double-click
+`index.html`** (no server needed). Internet is required either way — Three.js loads
+from a CDN.
 
 ## What you get
-- 94 spaces extruded to scale, colour-coded by category (classroom, specialist,
-  hall, admin, prayer, store, service, other).
-- Click any room → name, area, dimensions, level, finished-floor level.
+- ~94 rooms + circulation, extruded as **real polygon footprints** at true scale and
+  orientation, colour-coded by category.
+- Click any room → name, plan area, footprint extent, level, finished-floor level.
 - Search box, category toggles, label toggle, reset view.
+- Rooms whose exact shape couldn't be auto-traced are **flagged** (amber outline +
+  an "approximate footprint" note) — sized correctly, shape estimated.
 
-## How it was made (`build_spaces.py` → `spaces.json`)
-The PDF is a CAD export: dense vector linework + positioned text labels.
-1. **Areas + centres** — each `"xx.xx sqm"` label sits at a room's centroid, giving
-   every room its *true area* and *true position* directly from the drawing.
+## How it's made — pass 2 (`build_spaces_v2.py` → `spaces_v2.json` + `spaces-data.js`)
+The PDF is a flattened CAD export: ~410k vector paths + positioned text labels, no
+layers. The pipeline recovers real footprints instead of guessing boxes:
+
+1. **Area labels** — each `"xx.xx sqm"` label sits at a room's centre, giving every
+   room its *true area*, *position*, and *name* directly from the drawing.
 2. **Scale** — calibrated from the classroom grid pitch (stacked identical
-   ~58.76 m² rooms are ~90.6 pt apart → **0.0846 m/pt**). Geometric, so it's robust
-   to drawing noise.
-3. **Footprints** — flood-fill from each centre (walls thickened to seal doorways)
-   gives each room's *aspect ratio*; the rectangle is then sized to the exact
-   printed area. Where the fill is unreliable, the room falls back to a square of
-   the correct area.
+   ~58.76 m² rooms are ~90.6 pt apart → **0.0846 m/pt**). Geometric → robust.
+3. **Walls** — isolated from furniture/text by **segment length** (walls are long
+   lines; fixtures are short), on the thin black linework band (the grid is dropped
+   by colour/weight).
+4. **Footprints** — one seed per room label + auto-seeded corridor markers feed a
+   **marker-based watershed**, which tiles the floor into **non-overlapping** basins
+   that split at walls and door gaps. Each basin → contour → simplified polygon.
+5. **QA + flagging** — every footprint is checked against its printed area; any room
+   off by more than the tolerance is regrown from its seed *inside its own basin* to
+   the true area (so it can never overlap a neighbour) and flagged.
+
+Outputs `qa_overlay.png` (extracted polygons over the plan: green = exact,
+red = regrown/flagged, blue = circulation) for at-a-glance QA.
 
 Rebuild after changing the source or logic:
 ```bash
 pip install PyMuPDF numpy opencv-python-headless   # one-time
-python build_spaces.py
+python build_spaces_v2.py
 ```
 
-## Known limitations (POC)
-- Footprints are **area-true rectangles**, not exact wall outlines (L-shapes,
-  curves, corridors are approximated). Sizes and adjacencies are faithful.
-- A few room **names** carry stray CAD tokens (e.g. trailing `/`); cosmetic.
+## Accuracy (this POC)
+- ~53/94 rooms are exact auto-traced footprints; the rest are area-true, in-basin
+  approximations, flagged in the UI. Nothing is silently wrong.
+- True sizes, positions, orientations, and adjacencies; **no overlaps** by construction.
 - Single floor, single phase (Phase 1). Multi-floor needs the other plan sheets.
 
 ## Next steps toward a real product
-- Stack multiple floors (one `spaces.json` per level) for a whole-building view.
+- Stack multiple floors (one dataset per level) for a whole-building view.
 - First-person "walk the corridors" camera mode.
-- Exact footprints via the native `.dwg` (room polylines) instead of the PDF.
+- Exact footprints via the native `.dwg` (room polylines) instead of the PDF —
+  removes the ~10% that need flagging.
 - Link each space to school data (timetable, capacity, condition) for the BIM "I".
+
+---
+`build_spaces.py` is the original pass-1 extractor (area-box approximation), kept for
+reference; `build_spaces_v2.py` is the current pipeline.
